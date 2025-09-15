@@ -633,15 +633,14 @@
             
             if (config.useGoogleSheets && config.webappUrl) {
                 try {
+                    // Use form data to avoid CORS preflight
+                    const formData = new FormData();
+                    formData.append('action', 'addEntry');
+                    formData.append('data', JSON.stringify(entry));
+                    
                     const response = await fetch(config.webappUrl, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'addEntry',
-                            data: entry
-                        })
+                        body: formData
                     });
                     
                     if (response.ok) {
