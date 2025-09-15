@@ -690,20 +690,38 @@
         }
         
         // Load pain data
-        function loadPainData() {
-            const painData = JSON.parse(localStorage.getItem('painData')) || [];
+        async function loadPainData() {
+            let painData = [];
             const currentPatient = document.getElementById('patient-id').value;
             
-            // Filter data for current patient
-            const patientData = currentPatient ? 
-                painData.filter(entry => entry.patientId === currentPatient) : 
-                painData;
+            // Try to load from Google Sheets first
+            if (config.useGoogleSheets && config.webappUrl) {
+                try {
+                    const response = await fetch(config.webappUrl + '?action=getData' + (currentPatient ? '&patientId=' + encodeURIComponent(currentPatient) : ''));
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            painData = result.data;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Failed to load from Google Sheets, using localStorage:', error);
+                }
+            }
             
-            patientData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Fallback to localStorage if Google Sheets failed or not configured
+            if (painData.length === 0) {
+                const localData = JSON.parse(localStorage.getItem('painData')) || [];
+                painData = currentPatient ? 
+                    localData.filter(entry => entry.patientId === currentPatient) : 
+                    localData;
+            }
             
-            updateEntriesList(patientData);
-            updateStatistics(patientData);
-            updateChart(patientData);
+            painData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            updateEntriesList(painData);
+            updateStatistics(painData);
+            updateChart(painData);
         }
         
         // Update the entries list
@@ -830,17 +848,19 @@
         
         // Update the chart with data
         function updateChart(painData) {
-            if (painData.length === 0) {
-                painChart.data.labels = [];
-                painChart.data.datasets[0].data = [];
-                painChart.update();
+            if (!painData || painData.length === 0) {
+                if (painChart && painChart.data) {
+                    painChart.data.labels = [];
+                    painChart.data.datasets[0].data = [];
+                    painChart.update();
+                }
                 return;
             }
             
             const sortedData = [...painData].sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            const labels = sortedData.map(entry => formatDate(entry.date));
-            const data = sortedData.map(entry => entry.level);
+            const labels = sortedData.map(entry => formatDate(entry.date || entry.Date));
+            const data = sortedData.map(entry => entry.level || entry.Pain_Level);
             
             painChart.data.labels = labels;
             painChart.data.datasets[0].data = data;
