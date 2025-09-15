@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PainTrack - Professional Patient Monitoring</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #fca311;
+            --danger: #e63946;
+            --gray: #6c757d;
+            --white: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .config-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .config-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .main-content {
+            padding: 2rem 0;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .module-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .module-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .pain-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5rem 0;
+        }
+        
+        .pain-point {
+            text-align: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+            flex: 1;
+            margin: 0 2px;
+        }
+        
+        .pain-point:hover {
+            background: #f0f0f0;
+        }
+        
+        .pain-point.selected {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .pain-point .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .pain-point .label {
+            font-size: 0.8rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1.5rem;
+        }
+        
+        .entry-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+        
+        .entry-item {
+            padding: 1rem;
+            border-left: 4px solid var(--primary);
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .entry-date {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .entry-pain {
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 1.5rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-local {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>PainTrack Pro</span>
+                    <span id="status-indicator" class="status-indicator status-local">Local Storage</span>
+                </div>
+                <button class="config-btn" onclick="openConfig()">
+                    <i class="fas fa-cog"></i> Setup Google Sheets
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard">
+                <!-- Left Side - Input Form -->
+                <div class="sidebar">
+                    <div class="module-card">
+                        <div class="module-header">
+                            <h3 class="module-title">Patient Information</h3>
+                        </div>
+                        
+                        <form id="pain-form">
+                            <div class="form-group">
+                                <label for="patient-id">Patient ID/Name</label>
+                                <input type="text" class="form-control" id="patient-id" required placeholder="Enter patient identifier">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="pain-date">Date</label>
+                                <input type="date" class="form-control" id="pain-date" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Pain Level (0-10)</label>
+                                <div class="pain-scale">
+                                    <div class="pain-point" data-value="0">
+                                        <div class="number">0</div>
+                                        <div class="label">No Pain</div>
+                                    </div>
+                                    <div class="pain-point" data-value="1">
+                                        <div class="number">1</div>
+                                    </div>
+                                    <div class="pain-point" data-value="2">
+                                        <div class="number">2</div>
+                                        <div class="label">Mild</div>
+                                    </div>
+                                    <div class="pain-point" data-value="3">
+                                        <div class="number">3</div>
+                                    </div>
+                                    <div class="pain-point" data-value="4">
+                                        <div class="number">4</div>
+                                        <div class="label">Moderate</div>
+                                    </div>
+                                    <div class="pain-point" data-value="5">
+                                        <div class="number">5</div>
+                                    </div>
+                                    <div class="pain-point" data-value="6">
+                                        <div class="number">6</div>
+                                        <div class="label">Severe</div>
+                                    </div>
+                                    <div class="pain-point" data-value="7">
+                                        <div class="number">7</div>
+                                    </div>
+                                    <div class="pain-point" data-value="8">
+                                        <div class="number">8</div>
+                                    </div>
+                                    <div class="pain-point" data-value="9">
+                                        <div class="number">9</div>
+                                    </div>
+                                    <div class="pain-point" data-value="10">
+                                        <div class="number">10</div>
+                                        <div class="label">Worst</div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="pain-level" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="pain-notes">Notes & Comments</label>
+                                <textarea class="form-control" id="pain-notes" placeholder="Describe symptoms, triggers, medications, activities, etc."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">Save Entry</button>
+                        </form>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-header">
+                            <h3 class="module-title">Current Patient Stats</h3>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Today's Pain</div>
+                                <div class="stat-value" id="today-pain">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">7-Day Average</div>
+                                <div class="stat-value" id="week-pain">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">30-Day Trend</div>
+                                <div class="stat-value" id="trend-pain">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Charts and History -->
+                <div class="content-area">
+                    <div class="module-card">
+                        <div class="module-header">
+                            <h3 class="module-title">Pain Progress Chart</h3>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="pain-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-header">
+                            <h3 class="module-title">Recent Pain Entries</h3>
+                        </div>
+                        
+                        <div id="entries-container">
+                            <ul class="entry-list" id="pain-entries">
+                                <!-- Entries will be added here dynamically -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Google Sheets Integration Setup</h2>
+            
+            <div class="form-group">
+                <label for="sheets-url">Google Sheets URL</label>
+                <input type="url" class="form-control" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/your-sheet-id/edit">
+                <small>Paste your Google Sheets URL here</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="webapp-url">Google Apps Script Web App URL</label>
+                <input type="url" class="form-control" id="webapp-url" placeholder="https://script.google.com/macros/s/your-script-id/exec">
+                <small>This will be generated after setting up the Google Apps Script</small>
+            </div>
+            
+            <button type="button" class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+            <button type="button" class="btn" onclick="testConnection()" style="margin-left: 10px; background: #6c757d; color: white;">Test Connection</button>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                <h4>Setup Instructions:</h4>
+                <ol style="margin-left: 1rem;">
+                    <li>Create a new Google Sheets document</li>
+                    <li>Add headers: Date | Patient_ID | Pain_Level | Notes | Timestamp</li>
+                    <li>Go to Extensions → Apps Script</li>
+                    <li>Copy and paste the provided script code</li>
+                    <li>Deploy as web app and copy the URL here</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration and state management
+        let painChart;
+        let config = {
+            sheetsUrl: '',
+            webappUrl: '',
+            useGoogleSheets: false
+        };
+        
+        // Load configuration from localStorage
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('paintrack-config');
+            if (savedConfig) {
+                config = JSON.parse(savedConfig);
+                updateStatusIndicator();
+            }
+        }
+        
+        // Save configuration to localStorage
+        function saveConfig() {
+            const sheetsUrl = document.getElementById('sheets-url').value;
+            const webappUrl = document.getElementById('webapp-url').value;
+            
+            config.sheetsUrl = sheetsUrl;
+            config.webappUrl = webappUrl;
+            config.useGoogleSheets = !!(sheetsUrl && webappUrl);
+            
+            localStorage.setItem('paintrack-config', JSON.stringify(config));
+            updateStatusIndicator();
+            closeConfig();
+            
+            alert('Configuration saved successfully!');
+        }
+        
+        // Update status indicator
+        function updateStatusIndicator() {
+            const indicator = document.getElementById('status-indicator');
+            if (config.useGoogleSheets) {
+                indicator.textContent = 'Google Sheets Connected';
+                indicator.className = 'status-indicator status-connected';
+            } else {
+                indicator.textContent = 'Local Storage';
+                indicator.className = 'status-indicator status-local';
+            }
+        }
+        
+        // Open configuration modal
+        function openConfig() {
+            document.getElementById('configModal').style.display = 'block';
+            document.getElementById('sheets-url').value = config.sheetsUrl || '';
+            document.getElementById('webapp-url').value = config.webappUrl || '';
+        }
+        
+        // Close configuration modal
+        function closeConfig() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+        
+        // Test Google Sheets connection
+        async function testConnection() {
+            if (!config.webappUrl) {
+                alert('Please enter the Google Apps Script Web App URL first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(config.webappUrl + '?action=test');
+                if (response.ok) {
+                    alert('Connection successful! Google Sheets integration is working.');
+                } else {
+                    alert('Connection failed. Please check your configuration.');
+                }
+            } catch (error) {
+                alert('Connection failed: ' + error.message);
+            }
+        }
+        
+        // Initialize the application
+        function init() {
+            loadConfig();
+            document.getElementById('pain-date').valueAsDate = new Date();
+            setupEventListeners();
+            loadPainData();
+            initChart();
+        }
+        
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Pain scale selection
+            document.querySelectorAll('.pain-point').forEach(point => {
+                point.addEventListener('click', function() {
+                    document.querySelectorAll('.pain-point').forEach(p => {
+                        p.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    document.getElementById('pain-level').value = this.getAttribute('data-value');
+                });
+            });
+            
+            // Form submission
+            document.getElementById('pain-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const patientId = document.getElementById('patient-id').value;
+                const date = document.getElementById('pain-date').value;
+                const level = document.getElementById('pain-level').value;
+                const notes = document.getElementById('pain-notes').value;
+                
+                if (!level) {
+                    alert('Please select a pain level');
+                    return;
+                }
+                
+                savePainData(patientId, date, parseInt(level), notes);
+            });
+            
+            // Modal close events
+            document.querySelector('.close').onclick = closeConfig;
+            window.onclick = function(event) {
+                const modal = document.getElementById('configModal');
+                if (event.target === modal) {
+                    closeConfig();
+                }
+            };
+        }
+        
+        // Save pain data (Google Sheets or localStorage)
+        async function savePainData(patientId, date, level, notes) {
+            const entry = {
+                patientId,
+                date,
+                level,
+                notes,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (config.useGoogleSheets && config.webappUrl) {
+                try {
+                    const response = await fetch(config.webappUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addEntry',
+                            data: entry
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        alert('Pain entry saved to Google Sheets successfully!');
+                    } else {
+                        throw new Error('Failed to save to Google Sheets');
+                    }
+                } catch (error) {
+                    alert('Failed to save to Google Sheets. Saving locally instead.');
+                    saveToLocalStorage(entry);
+                }
+            } else {
+                saveToLocalStorage(entry);
+                alert('Pain entry saved locally!');
+            }
+            
+            // Reset form
+            resetForm();
+            loadPainData();
+        }
+        
+        // Save to localStorage
+        function saveToLocalStorage(entry) {
+            let painData = JSON.parse(localStorage.getItem('painData')) || [];
+            
+            const existingIndex = painData.findIndex(e => 
+                e.patientId === entry.patientId && e.date === entry.date
+            );
+            
+            if (existingIndex >= 0) {
+                painData[existingIndex] = entry;
+            } else {
+                painData.push(entry);
+            }
+            
+            localStorage.setItem('painData', JSON.stringify(painData));
+        }
+        
+        // Reset form
+        function resetForm() {
+            document.querySelectorAll('.pain-point').forEach(p => {
+                p.classList.remove('selected');
+            });
+            document.getElementById('pain-level').value = '';
+            document.getElementById('pain-notes').value = '';
+            document.getElementById('pain-date').valueAsDate = new Date();
+        }
+        
+        // Load pain data
+        function loadPainData() {
+            const painData = JSON.parse(localStorage.getItem('painData')) || [];
+            const currentPatient = document.getElementById('patient-id').value;
+            
+            // Filter data for current patient
+            const patientData = currentPatient ? 
+                painData.filter(entry => entry.patientId === currentPatient) : 
+                painData;
+            
+            patientData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            updateEntriesList(patientData);
+            updateStatistics(patientData);
+            updateChart(patientData);
+        }
+        
+        // Update the entries list
+        function updateEntriesList(painData) {
+            const entriesList = document.getElementById('pain-entries');
+            entriesList.innerHTML = '';
+            
+            if (painData.length === 0) {
+                entriesList.innerHTML = '<p>No pain entries yet. Add your first entry using the form.</p>';
+                return;
+            }
+            
+            painData.slice(0, 10).forEach(entry => {
+                const li = document.createElement('li');
+                li.className = 'entry-item';
+                
+                const painDescription = getPainDescription(entry.level);
+                
+                li.innerHTML = `
+                    <div class="entry-header">
+                        <span class="entry-date">${formatDate(entry.date)}</span>
+                        <span class="entry-pain">Pain Level: ${entry.level}/10 (${painDescription})</span>
+                    </div>
+                    <div class="entry-notes"><strong>Patient:</strong> ${entry.patientId}</div>
+                    <div class="entry-notes">${entry.notes || 'No additional notes'}</div>
+                `;
+                
+                entriesList.appendChild(li);
+            });
+        }
+        
+        // Update statistics
+        function updateStatistics(painData) {
+            if (painData.length === 0) {
+                document.getElementById('today-pain').textContent = '-';
+                document.getElementById('week-pain').textContent = '-';
+                document.getElementById('trend-pain').textContent = '-';
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayEntry = painData.find(entry => entry.date === today);
+            document.getElementById('today-pain').textContent = todayEntry ? `${todayEntry.level}/10` : '-';
+            
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            
+            const weekEntries = painData.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate >= oneWeekAgo;
+            });
+            
+            if (weekEntries.length > 0) {
+                const weekSum = weekEntries.reduce((sum, entry) => sum + entry.level, 0);
+                const weekAvg = (weekSum / weekEntries.length).toFixed(1);
+                document.getElementById('week-pain').textContent = `${weekAvg}/10`;
+            } else {
+                document.getElementById('week-pain').textContent = '-';
+            }
+            
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+            
+            const monthEntries = painData.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate >= oneMonthAgo;
+            });
+            
+            if (monthEntries.length >= 2) {
+                const firstAvg = monthEntries[monthEntries.length - 1].level;
+                const lastAvg = monthEntries[0].level;
+                const trend = lastAvg - firstAvg;
+                
+                let trendText = 'Stable';
+                if (trend < -1) trendText = 'Improving';
+                if (trend > 1) trendText = 'Worsening';
+                
+                document.getElementById('trend-pain').textContent = trendText;
+            } else {
+                document.getElementById('trend-pain').textContent = 'Insufficient data';
+            }
+        }
+        
+        // Initialize the chart
+        function initChart() {
+            const ctx = document.getElementById('pain-chart').getContext('2d');
+            
+            painChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Pain Level',
+                        data: [],
+                        backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(67, 97, 238, 1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Pain Level (0-10)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update the chart with data
+        function updateChart(painData) {
+            if (painData.length === 0) {
+                painChart.data.labels = [];
+                painChart.data.datasets[0].data = [];
+                painChart.update();
+                return;
+            }
+            
+            const sortedData = [...painData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const labels = sortedData.map(entry => formatDate(entry.date));
+            const data = sortedData.map(entry => entry.level);
+            
+            painChart.data.labels = labels;
+            painChart.data.datasets[0].data = data;
+            painChart.update();
+        }
+        
+        // Helper function to format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+        
+        // Helper function to get pain description
+        function getPainDescription(level) {
+            if (level === 0) return 'No pain';
+            if (level <= 3) return 'Mild';
+            if (level <= 6) return 'Moderate';
+            if (level <= 9) return 'Severe';
+            return 'Worst possible';
+        }
+        
+        // Update data when patient ID changes
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            
+            document.getElementById('patient-id').addEventListener('input', function() {
+                loadPainData();
+            });
+        });
+    </script>
+</body>
+</html>
