@@ -38,7 +38,7 @@ Visit: `https://yourusername.github.io/paintrack-app`
 2. Click the gear icon ⚙️ next to "Type" and select **Web app**
 3. Set the following configuration:
    - **Description**: "PainTrack Patient Data API"
-   - **Execute as**: "Me (your-email@gmail.com)"
+   - **Execute as**: "Me (neuranest.artificail@gmail.com)"
    - **Who has access**: "Anyone" (for public access) or "Anyone with Google account"
 4. Click **Deploy**
 5. **Important**: Copy the Web app URL - you'll need this for the PainTrack app
@@ -118,7 +118,7 @@ Visit: `https://yourusername.github.io/paintrack-app`
 
 For technical support or feature requests:
 1. Create an issue in this repository
-2. Email: support@yourdomain.com
+2. Email: neuranest.artificail@gmail.com
 3. Include browser version and error details
 
 ## 📄 License
