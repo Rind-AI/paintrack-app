@@ -3,16 +3,19 @@
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    
-    if (data.action === 'addEntry') {
-      return addPainEntry(data.data);
+    // Handle FormData from frontend
+    const action = e.parameter.action;
+    const dataString = e.parameter.data;
+
+    if (action === 'addEntry' && dataString) {
+      const data = JSON.parse(dataString);
+      return addPainEntry(data);
     }
-    
+
     return ContentService
       .createTextOutput(JSON.stringify({success: false, error: 'Unknown action'}))
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({success: false, error: error.toString()}))
